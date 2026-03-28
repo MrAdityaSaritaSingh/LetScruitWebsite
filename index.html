@@ -363,6 +363,7 @@
     </footer>
 
     <!-- Form & UI Script -->
+    <script src="config.js"></script>
     <script>
         // Form Submission Logic
         const betaForm = document.getElementById('beta-form');
@@ -370,7 +371,7 @@
         const formWrapper = document.getElementById('form-wrapper');
         const successMessage = document.getElementById('success-message');
         const resetBtn = document.getElementById('reset-btn');
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRX116kTCMXXpyjuxREHOSMmblv6DttefMDQvdMFG81M9DygWA58AfJqXnioxwOx1t1A/exec';
+        const GOOGLE_SCRIPT_URL = window.APP_CONFIG.GOOGLE_SCRIPT_URL;
 
         if (betaForm) {
             betaForm.addEventListener('submit', async (e) => {
