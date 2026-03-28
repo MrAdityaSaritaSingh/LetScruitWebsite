@@ -191,73 +191,56 @@
         </div>
     </footer>
 
-    <!-- Firebase SDKs -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-
-        // CONFIGURATION: 
-        // If hosting yourself, replace these variables with your actual Firebase project config.
-        const firebaseConfig = typeof __firebase_config !== 'undefined' 
-            ? JSON.parse(__firebase_config) 
-            : {
-                apiKey: "YOUR_API_KEY",
-                authDomain: "YOUR_AUTH_DOMAIN",
-                projectId: "YOUR_PROJECT_ID",
-                storageBucket: "YOUR_STORAGE_BUCKET",
-                messagingSenderId: "YOUR_SENDER_ID",
-                appId: "YOUR_APP_ID"
-            };
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ledger-scrutiny-assistant';
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
+    <!-- Form & UI Script -->
+    <script>
         // Form Submission Logic
         const betaForm = document.getElementById('beta-form');
         const submitBtn = document.getElementById('submit-btn');
         const formContainer = document.getElementById('form-container');
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxatm5MqZX3sdSLIwviW1V7h4zJtGTuQMJgfcjUxplXG7e6UiCdNyZITw32m638B0ZCeA/exec';
 
-        betaForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span>Processing...</span>';
+        if (betaForm) {
+            betaForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span>Processing...</span>';
 
-            try {
-                // Anonymous auth to permit writes
-                await signInAnonymously(auth);
+                try {
+                    const formData = {
+                        name: document.getElementById('name').value,
+                        email: document.getElementById('email').value,
+                        role: document.getElementById('role').value
+                    };
 
-                const formData = {
-                    name: document.getElementById('name').value,
-                    email: document.getElementById('email').value,
-                    role: document.getElementById('role').value,
-                    timestamp: serverTimestamp(),
-                    source: 'external_host'
-                };
+                    // Send data to Google Apps Script
+                    await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(formData),
+                        headers: {
+                            'Content-Type': 'text/plain;charset=utf-8', // text/plain prevents CORS preflight issues
+                        }
+                    });
 
-                const leadsRef = collection(db, 'artifacts', appId, 'public', 'data', 'leads');
-                await addDoc(leadsRef, formData);
-
-                formContainer.innerHTML = `
-                    <div class="text-center py-12">
-                        <div class="w-20 h-20 bg-blue-50 text-blue-800 rounded-full flex items-center justify-center mx-auto mb-8">
-                            <i data-lucide="check-circle-2" class="w-12 h-12"></i>
+                    // Show success message
+                    formContainer.innerHTML = `
+                        <div class="text-center py-12">
+                            <div class="w-20 h-20 bg-blue-50 text-blue-800 rounded-full flex items-center justify-center mx-auto mb-8">
+                                <i data-lucide="check-circle-2" class="w-12 h-12"></i>
+                            </div>
+                            <h2 class="text-4xl font-black mb-4">Registration Complete</h2>
+                            <p class="text-slate-600 text-lg font-medium">Thank you! Your details have been securely saved to our lead database.</p>
                         </div>
-                        <h2 class="text-4xl font-black mb-4">Registration Complete</h2>
-                        <p class="text-slate-600 text-lg font-medium">Thank you! Your details have been securely saved to our lead database.</p>
-                    </div>
-                `;
-                lucide.createIcons();
-            } catch (err) {
-                console.error(err);
-                alert("Failed to join. Please check your internet connection.");
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<span>Request Beta Access Now</span>';
-            }
-        });
+                    `;
+                    lucide.createIcons();
+                } catch (err) {
+                    console.error(err);
+                    alert("Failed to join. Please check your internet connection.");
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<span>Request Beta Access Now</span> <i data-lucide="arrow-right" class="w-5 h-5"></i>';
+                    lucide.createIcons();
+                }
+            });
+        }
 
         // Initialize Icons & Table
         window.addEventListener('DOMContentLoaded', () => {
@@ -276,7 +259,7 @@
                     <td class="px-8 py-5 font-bold text-slate-800">${row.head}</td>
                     <td class="px-8 py-5 text-right font-black">${row.amt}</td>
                     <td class="px-8 py-5">
-                        ${row.flag !== '-' ? `<span class="text-red-600 font-bold text-[11px] bg-red-50 px-3 py-1 rounded-full border border-red-100">${row.flag}</span>` : '<span class="text-slate-300">—</span>'}
+                        ${row.flag !== '-' ? \`<span class="text-red-600 font-bold text-[11px] bg-red-50 px-3 py-1 rounded-full border border-red-100">\${row.flag}</span>\` : '<span class="text-slate-300">—</span>'}
                     </td>
                 </tr>
             `).join('');
